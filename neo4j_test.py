@@ -26,6 +26,7 @@ for record in result:
 
 for i, el in enumerate(list_labels):                      # read enumerate
     name = list_name[i]
+    str = ''
     query_build = ''' MATCH p = (n:'''+el+'''{name:"'''+name+'''"})-[*]->()
                       with collect(p) as path
                       CALL apoc.convert.toTree(path) yield value
@@ -38,30 +39,49 @@ for i, el in enumerate(list_labels):                      # read enumerate
         # except OSError as e:
             # if e.errno != errno.EEXIST:
                 # raise
-    
-    def item_generator(json_input, lookup_key):
-        if isinstance(json_input, dict):
-            for k, v in json_input.items():
-                if k == lookup_key:
-                    yield v
-                else:
-                    yield from item_generator(v, lookup_key)
-        elif isinstance(json_input, list):
-            for item in json_input:
-                yield from item_generator(item, lookup_key)           
+    def extract_values(obj):
+        """Pull all values of specified key from nested JSON."""
+        arr = []
+        print(obj)
+        def extract(obj, arr):
+            """Recursively search for values of key in JSON tree."""
+            if isinstance(obj, dict):
+                #print("1")
+                for k, v in obj.items():
+                    if isinstance(v, (dict, list)):
+                        arr.append(k)
+                        extract(v, arr)
+                    elif (k == 'name' or k == 'title'):
+                        #print("111")
+                        arr.append(v)
+            elif isinstance(obj, list):
+               # print("2")
+                for item in obj:
+                    #print("22")
+                    extract(item, arr)
+                print(arr)
+                return arr
+
+        results = extract(obj, arr)
+        #print(results)
+        return results       
+        
     for rc in tree_json:
         keys = list(rc[0].keys())
- #       for _ in item_generator(rc[0],'acted_in'):
- #           print(_)
-        print(rc[0])
+        if(rc[0]['_type']== 'Person'):
+            str = rc[0]['name']
+            rv = extract_values(rc[0])
+            print(rv)
+        #print(rc[0])
+        #print("------")
 #        for key in keys:
 #            print(rc[0][key])
             
-#        print('---end---')
+    #print(str)
 
 
 
-#print(list_labels) 
+#print(str) 
 #print(list_name)  
 
   
